@@ -186,6 +186,21 @@ export const SHEET_TEMPLATES: SheetTemplate[] = [
     ],
   },
   {
+    id: 'bills',
+    name: 'Bill & Receipt Log',
+    description: 'Columns tailored for scanned bills: vendor, date, invoice #, tax, and total.',
+    sheetName: 'Bills',
+    fileName: 'scanned-bills',
+    columns: [
+      { id: 'col_vendor', label: 'Vendor', type: 'text', required: true },
+      { id: 'col_bill_date', label: 'Date', type: 'date' },
+      { id: 'col_invoice_no', label: 'Invoice #', type: 'text' },
+      { id: 'col_tax', label: 'Tax', type: 'number' },
+      { id: 'col_total', label: 'Total', type: 'number', required: true },
+    ],
+    rows: [],
+  },
+  {
     id: 'blank',
     name: 'Blank Sheet',
     description: 'Start fresh with three empty text columns.',

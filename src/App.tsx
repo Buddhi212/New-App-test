@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, CheckCircle2, Palette, Smartphone, WifiOff } from 'lucide-react';
+import { Check, CheckCircle2, Palette, ScanLine, Smartphone, WifiOff } from 'lucide-react';
 import { DataGrid } from './components/DataGrid';
 import { EntryForm } from './components/EntryForm';
 import { InstallAppModal } from './components/InstallAppModal';
+import { ScanBillModal } from './components/ScanBillModal';
 import { SidebarConfig } from './components/SidebarConfig';
 import { TopBar } from './components/TopBar';
 import { useOnlineStatus, usePWAInstall } from './hooks/usePWAInstall';
+import { buildBillRowPlan, type ParsedBillFields } from './utils/billParser';
 import {
   BACKGROUND_PRESETS,
   DEFAULT_BACKGROUND_COLOR,
@@ -107,6 +109,7 @@ export default function App() {
   const [backgroundColor, setBackgroundColor] = useState<string>(() => loadInitialBackground());
   const [isBgPopoverOpen, setIsBgPopoverOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [isScanBillOpen, setIsScanBillOpen] = useState(false);
   const bgPopoverRef = useRef<HTMLDivElement | null>(null);
 
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
@@ -163,6 +166,25 @@ export default function App() {
       if (accepted) return;
     }
     setIsInstallModalOpen(true);
+  };
+
+  const handleSaveBill = (fields: ParsedBillFields, ensureBillColumns: boolean) => {
+    const plan = buildBillRowPlan(columns, fields, ensureBillColumns);
+    if (plan.columnsToAdd.length > 0) {
+      const updatedCols = [...columns, ...plan.columnsToAdd];
+      setColumns(updatedCols);
+      setDraft(createEmptyDraft(updatedCols));
+    }
+    const newRow: RowData = {
+      id: `row_bill_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      values: plan.rowValues,
+    };
+    setRows((prev) => [...prev, newRow]);
+    setExportNotice(
+      fields.vendor
+        ? `Saved bill from ${fields.vendor} to sheet`
+        : 'Saved scanned bill row to sheet'
+    );
   };
 
   const darkBg = isDarkBackground(backgroundColor);
@@ -488,6 +510,15 @@ export default function App() {
                   <span>{isInstallable ? 'Install App' : 'Get Phone App'}</span>
                 </button>
               )}
+
+              <button
+                type="button"
+                onClick={() => setIsScanBillOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              >
+                <ScanLine className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Scan Bill</span>
+              </button>
             </div>
           </div>
 
@@ -531,6 +562,12 @@ export default function App() {
         isInstallable={isInstallable}
         isIOS={isIOS}
         onTriggerNativeInstall={install}
+      />
+
+      <ScanBillModal
+        isOpen={isScanBillOpen}
+        onClose={() => setIsScanBillOpen(false)}
+        onSaveBill={handleSaveBill}
       />
     </div>
   );
