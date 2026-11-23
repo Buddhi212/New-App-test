@@ -1,5 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Check, Plus, Trash2, X } from 'lucide-react';
+import {
+  BACKGROUND_PRESETS,
+  DEFAULT_BACKGROUND_COLOR,
+} from '../utils/backgroundPresets';
 import {
   SHEET_TEMPLATES,
   sanitizeFileName,
@@ -20,6 +24,8 @@ interface SidebarConfigProps {
   columns: ColumnDef[];
   onAddColumn: (label: string, type: ColumnType, optionsCsv: string) => void;
   onRemoveColumn: (colId: string) => void;
+  backgroundColor: string;
+  onChangeBackgroundColor: (color: string) => void;
 }
 
 const TYPE_LABELS: Record<ColumnType, string> = {
@@ -41,6 +47,8 @@ export function SidebarConfig({
   columns,
   onAddColumn,
   onRemoveColumn,
+  backgroundColor,
+  onChangeBackgroundColor,
 }: SidebarConfigProps) {
   const [newColLabel, setNewColLabel] = useState('');
   const [newColType, setNewColType] = useState<ColumnType>('text');
@@ -154,6 +162,73 @@ export function SidebarConfig({
           <p className="mt-1 text-xs text-slate-500 font-mono truncate">
             Tab: {sanitizeSheetName(sheetName)}
           </p>
+        </div>
+      </section>
+
+      {/* Section 2b: Workspace Background */}
+      <section className="p-4 border-b border-slate-200 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold text-slate-500 tracking-wide">
+            Background
+          </h2>
+          {backgroundColor.toLowerCase() !== DEFAULT_BACKGROUND_COLOR && (
+            <button
+              type="button"
+              onClick={() => onChangeBackgroundColor(DEFAULT_BACKGROUND_COLOR)}
+              className="text-xs font-medium text-emerald-700 hover:text-emerald-800 cursor-pointer"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-6 gap-2" role="group" aria-label="Background presets">
+          {BACKGROUND_PRESETS.map((preset) => {
+            const isSelected = backgroundColor.toLowerCase() === preset.color.toLowerCase();
+            const isDark = preset.color === '#0f172a';
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => onChangeBackgroundColor(preset.color)}
+                aria-label={`Background ${preset.name}`}
+                aria-pressed={isSelected}
+                title={preset.name}
+                style={{ backgroundColor: preset.color }}
+                className={`h-8 rounded-md border flex items-center justify-center transition-transform cursor-pointer ${
+                  isSelected
+                    ? 'border-emerald-700 ring-2 ring-emerald-700/30 scale-105'
+                    : 'border-slate-300 hover:border-slate-400'
+                }`}
+              >
+                {isSelected && (
+                  <Check
+                    className={`w-3.5 h-3.5 ${isDark ? 'text-white' : 'text-emerald-700'}`}
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <label htmlFor="sidebar-custom-bg" className="text-xs text-slate-600">
+            Custom color
+          </label>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-slate-500 uppercase">
+              {backgroundColor}
+            </span>
+            <input
+              id="sidebar-custom-bg"
+              type="color"
+              aria-label="Custom background color"
+              value={backgroundColor}
+              onChange={(e) => onChangeBackgroundColor(e.target.value)}
+              className="w-8 h-7 p-0.5 rounded border border-slate-300 bg-white cursor-pointer"
+            />
+          </div>
         </div>
       </section>
 
